@@ -38,15 +38,65 @@ class Autocompleter
 				//visit each character of string x
 				if(arrow->children[x[i]] == nullptr)		//if there is no next character
 					arrow->children[x[i]] = new Node;		//create new node for next character
+			
+				arrow = arrow->children[x[i]];				//update/move arrow to the children of current node
+				path.push_back(arrow);						//each time, it saves address of node that arrow is currently pointing to
+
 			}
 
-			arrow = arrow->children[x[i]];				//update/move arrow to the children of current node
-			path.push_back(arrow);						//each time, it saves address of node that arrow is currently pointing to
+			arrow->marked = true;		//mark the last node of the path as true to complete the word
+			count++;					//increment number of words in dictionary
+
+			Entry e;		//create an entry to store the string and its frequency
+			e.s = x;		//store the string in the entry
+			e.freq = freq;	//store the frequency in the entry
+
+			// THIS IS WHERE WE WILL STORE AND UPDATE TOP 3 COMPLETIONS
+			//visit every node along the path of the word
+			//O(1) time because the length of the string is O(1)
+			for(int i=0; i<path.size(); i++)
+			{
+				Node* p = path[i];		//get the current node at index i of the path
+				p->top.push_back(e);		//add the entry to the top vector of the current node
+				
+				// === sort candidates from highest to lowest frequency
+				//O(1) because we compare AT MOST 4 entries (the new entry and the previous top 3 entries)
+			
+				//if there are at least 2 entries 
+				//AND If the new entry has a higher frequency than the top 1
+				if(p->top.size() >= 2 && p->top.back().freq > p->top[0].freq)
+				{
+					Entry temp = p->top[0];       //Save the old top 1
+					p->top[0] = p->top.back();    //Move the new entry to top 1
+					p->top.back() = temp;         //Move the old top 1 to the end
+				}
+
+				// If there are at least 3 entries, compare with top 2
+				if(p->top.size() >= 3 && p->top.back().freq > p->top[1].freq)
+				{
+					Entry temp = p->top[1];       //Save the old top 2
+					p->top[1] = p->top.back();    //Move the entry to top 2
+					p->top.back() = temp;         //Move the old top 2 to the end
+				}
+
+				// If there are 4 entries, compare with top 3
+				if(p->top.size() >= 4 && p->top.back().freq > p->top[2].freq)
+				{
+					Entry temp = p->top[2];       // Save the old top 3
+					p->top[2] = p->top.back();    // Move the entry to top 3
+					p->top.back() = temp;         // Move the old top 3 to the end
+				}
+
+				// If there are more than 3 entries, remove the last entry
+				if(p->top.size() > 3)
+				{
+					p->top.pop_back();
+				}
+			}
 		}
 
-		arrow->marked = true;		//mark the last node of the path as true to complete the word
-		count++;					//increment number of words in dictionary
-
+		
+			
 		// Returns the number of strings in the dictionary.
 		// 
 		// Must run in O(1) time.
@@ -67,7 +117,7 @@ class Autocompleter
 			//a prefix usually takes O(|x|) time to traverse the trie, 
 			//but since we assume that the length of every string is O(1), 
 			// it takes O(1) time to traverse the trie for a prefix
-			
+
 			T.clear();		//clear the vector T to store new completions
 
 			Node* finger=root;	//start at root of node
