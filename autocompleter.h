@@ -71,7 +71,7 @@ class Autocompleter
 					p->top.back() = temp;         //Move the old top 1 to the end
 				}
 
-				// If there are at least 3 entries, compare with top 2
+				//If there are at least 3 entries, compare with top 2
 				if(p->top.size() >= 3 && p->top.back().freq > p->top[1].freq)
 				{
 					Entry temp = p->top[1];       //Save the old top 2
@@ -79,15 +79,15 @@ class Autocompleter
 					p->top.back() = temp;         //Move the old top 2 to the end
 				}
 
-				// If there are 4 entries, compare with top 3
+				//If there are 4 entries, compare with top 3
 				if(p->top.size() >= 4 && p->top.back().freq > p->top[2].freq)
 				{
-					Entry temp = p->top[2];       // Save the old top 3
-					p->top[2] = p->top.back();    // Move the entry to top 3
-					p->top.back() = temp;         // Move the old top 3 to the end
+					Entry temp = p->top[2];       //Save the old top 3
+					p->top[2] = p->top.back();    //Move the entry to top 3
+					p->top.back() = temp;         //Move the old top 3 to the end
 				}
 
-				// If there are more than 3 entries, remove the last entry
+				//If there are more than 3 entries, remove the last entry
 				if(p->top.size() > 3)
 				{
 					p->top.pop_back();
