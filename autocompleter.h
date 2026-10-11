@@ -16,7 +16,7 @@ class Autocompleter
 		// Creates a new Autocompleter with an empty dictionary.
 		//
 		// Must run in O(1) time.
-		Autocompleter::Autocompleter()
+		Autocompleter()
 		{
 			//creating the root and setting count take O(1)
 			root = new Node;
@@ -27,10 +27,11 @@ class Autocompleter
 		// If x is already in the dictionary, does nothing.
 		//
 		// Must run in O(1) time.
-		void Autocompleter::insert(string x, int freq)
+		void insert(string x, int freq)
 		{
-			node* arrow = root;		//arrow ponts at root to traverse the trie
+			Node* arrow = root;		//arrow ponts at root to traverse the trie
 			vector<Node*> path;		//vector to store the path of nodes traversed	
+			path.push_back(root);	//saves root node once
 
 			//loops through each character of the string x and creates a new node for each character if it does not exist in the trie
 			for(int i=0; i<x.length(); i++)
@@ -40,9 +41,12 @@ class Autocompleter
 					arrow->children[x[i]] = new Node;		//create new node for next character
 			
 				arrow = arrow->children[x[i]];				//update/move arrow to the children of current node
-				path.push_back(arrow);						//each time, it saves address of node that arrow is currently pointing to
-
+				path.push_back(arrow);						//store the current character node in the path vector
 			}
+
+			//If the word already exists, do nothing
+        	if (arrow->marked)
+            	return;
 
 			arrow->marked = true;		//mark the last node of the path as true to complete the word
 			count++;					//increment number of words in dictionary
@@ -61,46 +65,48 @@ class Autocompleter
 				
 				// === sort candidates from highest to lowest frequency
 				//O(1) because we compare AT MOST 4 entries (the new entry and the previous top 3 entries)
-			
-				//if there are at least 2 entries 
-				//AND If the new entry has a higher frequency than the top 1
-				if(p->top.size() >= 2 && p->top.back().freq > p->top[0].freq)
+				//Compare the last entry with the entry before it.
+				//Move the new entry toward the front if its frequency is higher.
+				//There are at most 4 entries, so these comparisons take O(1).
+
+				//Compare with top 3
+				if (p->top.size() >= 4 &&
+					p->top[3].freq > p->top[2].freq)
 				{
-					Entry temp = p->top[0];       //Save the old top 1
-					p->top[0] = p->top.back();    //Move the new entry to top 1
-					p->top.back() = temp;         //Move the old top 1 to the end
+					Entry temp = p->top[3];			//store entry 4 temporarily
+					p->top[3] = p->top[2];			//Moves entry 3 to position 4
+					p->top[2] = temp;				//move the saved entry 4 to position 3
 				}
 
-				//If there are at least 3 entries, compare with top 2
-				if(p->top.size() >= 3 && p->top.back().freq > p->top[1].freq)
+				//Compare with top 2
+				if (p->top.size() >= 3 &&
+					p->top[2].freq > p->top[1].freq)
 				{
-					Entry temp = p->top[1];       //Save the old top 2
-					p->top[1] = p->top.back();    //Move the entry to top 2
-					p->top.back() = temp;         //Move the old top 2 to the end
+					Entry temp = p->top[2];			//store entry 3 temporarily
+					p->top[2] = p->top[1];			//move entry 2 to position 3
+					p->top[1] = temp;				//move the saved entry 3 to position 2
 				}
 
-				//If there are 4 entries, compare with top 3
-				if(p->top.size() >= 4 && p->top.back().freq > p->top[2].freq)
+				//Compare with top 1
+				if (p->top.size() >= 2 &&
+					p->top[1].freq > p->top[0].freq)
 				{
-					Entry temp = p->top[2];       //Save the old top 3
-					p->top[2] = p->top.back();    //Move the entry to top 3
-					p->top.back() = temp;         //Move the old top 3 to the end
+					Entry temp = p->top[1];			//store entry 2 temporarily
+					p->top[1] = p->top[0];			//move entry 1 to position 2
+					p->top[0] = temp;				//move the saved entry 2 to position 1
 				}
 
-				//If there are more than 3 entries, remove the last entry
-				if(p->top.size() > 3)
-				{
+				// If there are more than 3 entries, remove the last entry
+				if (p->top.size() > 3)
 					p->top.pop_back();
-				}
 			}
-		}
 
 		
 			
 		// Returns the number of strings in the dictionary.
 		// 
 		// Must run in O(1) time.
-		int Autocompleter::size()
+		int size()
 		{
 			//O(1) time because it just returns the count of words in the dictionary
 			return count;
@@ -112,7 +118,7 @@ class Autocompleter
 		// The completions appear in T from most to least frequent.
 		// 
 		// Must run in O(1) time.
-		void Autocompleter::completions(string x, vector<string> &T)
+		void completions(string x, vector<string> &T)
 		{
 			//a prefix usually takes O(|x|) time to traverse the trie, 
 			//but since we assume that the length of every string is O(1), 
@@ -130,9 +136,9 @@ class Autocompleter
 
 			}
 
-			//copies stored top completions into T
+			//copies the stored top completions into T
 			for(int i=0; i<finger->top.size(); i++)
-				T.push_back(finger->top[i].s);		//adds each word to the resutl
+				T.push_back(finger->top[i].s);		//adds each word to the result
 		}
 
 
